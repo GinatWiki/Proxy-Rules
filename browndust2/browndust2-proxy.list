@@ -1,0 +1,7 @@
+# Browndust2 走代理名单（PROXY）
+# 语义与 sing-box rule-set domain_suffix 一致：含自身及全部子域
+# 2026-09-16 由 OxiDNS 配置同步生成
+domain:browndust2.global
+domain:browndust2-db.souseha.com
+domain:googleapis.com
+domain:withgoogle.com

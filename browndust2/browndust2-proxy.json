@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "domain_suffix": [
+        "browndust2.global",
+        "browndust2-db.souseha.com",
+        "googleapis.com",
+        "withgoogle.com"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "domain_suffix": [
+        "neonapi.com",
+        "bd2.pmang.cloud",
+        "msk.pmang.cloud"
+      ]
+    }
+  ]
+}
