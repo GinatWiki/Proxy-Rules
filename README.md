@@ -1,71 +1,74 @@
 # Proxy-Rules
 
-自定义分流规则集仓库。供 Open-Box（sing-box 内核）通过「规则集链接(URL)」或手工导入使用。
+自定义分流规则集仓库。供 Open-Box（sing-box 内核）「规则集链接」导入使用。
+
+## ⚠️ 面板导入格式（重要，v2 修正）
+
+Open-Box 面板「规则集链接」按**内容魔数**识别格式：
+
+| 内容 | 面板行为 |
+|---|---|
+| **Clash 规则行 / 一行一个域名**（纯文本） | ✅ 直接解析，域名/IP 自动拆分编译 |
+| **mihomo 的 .mrs**（zstd 压缩二进制） | ✅ zstd 解压后解析 |
+| sing-box binary rule-set（.srs 格式） | ❌ 被当 UTF-8 文本解析 → **匹配条目为空** |
+
+> v1 的教训：`sing-box rule-set compile` 产出的二进制虽然扩展名叫 .mrs，但它是 sing-box 格式（魔数 `SRS\x01`），**不是** mihomo zstd .mrs（魔数 `28 B5 2F FD`）——面板解析为 0 条。
+
+**⇒ 导入面板请用 `.list` 文件（Clash 规则行纯文本）。**
 
 ## 目录
 
 | 子目录 | 用途 |
 |---|---|
-| `browndust2/` | Brown Dust 2 游戏分流（登录/支付/Google API 走代理，Neon/pmang 直连例外） |
+| `browndust2/` | Brown Dust 2 游戏分流 |
 
-## 文件格式说明
+## Browndust2 规则集（v2，2026-09-16）
 
-每个规则集目录包含三种格式：
+**设计决策（用户确认）**：原来 Browndust2 站点集里的全部域名 + 本次的 DIRECT 域名（neonapi/pmang）**统一走代理**，不维护单独 direct 集。
 
-| 文件 | 格式 | 用途 |
+| 文件 | 内容 | 用途 |
 |---|---|---|
-| `*.list` | `domain:`/`domain-suffix:` 前缀纯文本 | 源清单（人读/编辑用），兼容 OxiDNS `domain_set` 语法 |
-| `*.json` | sing-box rule-set 源格式（version 1） | `sing-box rule-set compile` 的输入 |
-| `*.mrs` | sing-box 二进制 rule-set | **直接导入目标格式**（Open-Box 面板 / sing-box `rule_set` 的 `format: "binary"`） |
+| `browndust2.list` | Clash 规则行（**面板导入用这个**） | 规则集链接 URL |
+| `browndust2.json` | sing-box 源格式 | 本地编译输入 |
+| `browndust2.mrs` | sing-box binary（存档，**别导入面板**） | 备用 |
 
-## Browndust2 规则集
+### 名单内容（7 条）
 
-### browndust2-proxy（走代理 PROXY）
+```
+DOMAIN-SUFFIX,browndust2.global      # 游戏本体/官网/登录（含 signin.）
+DOMAIN-SUFFIX,googleapis.com         # Google 服务 API
+DOMAIN-SUFFIX,withgoogle.com         # Google 游戏服务
+DOMAIN-SUFFIX,souseha.com            # browndust2-db.souseha.com（数据库，整域后缀）
+DOMAIN-SUFFIX,akamaized.net          # 原 Browndust2 站点集既有条目
+DOMAIN-SUFFIX,pmang.cloud            # bd2./msk./live-www.neon. 全部子域
+DOMAIN,signin.browndust2.global      # 精确匹配（冗余保险，后缀已覆盖）
+```
 
-- `browndust2.global` — 游戏官网/登录/支付（含 signin.browndust2.global）
-- `browndust2-db.souseha.com` — 游戏数据库（曾单列）
-- `googleapis.com` — Google 登录/服务 API
-- `withgoogle.com` — Google 游戏服务
+### 与原 Browndust2 站点集的对应
 
-### browndust2-direct（直连例外 DIRECT）
+原 route[17]/dns[14]（面板站点集）：`browndust2-db.souseha.com`、`akamaized.net`、`msk.pmang.cloud`、`bd2.pmang.cloud` —— 本名单用 `souseha.com` + `pmang.cloud` 整域后缀**完全覆盖并放宽**（neonapi 的 CNAME live-www.neon.pmang.cloud 也命中）。
 
-- `neonapi.com` — Neon 登录服务（www.neonapi.com → live-www.neon.pmang.cloud）
-- `bd2.pmang.cloud` — 游戏云服务
-- `msk.pmang.cloud` — 游戏云服务（mask 相关）
+### OxiDNS proxy_domains 对应（已生效）
 
-**使用顺序**：direct 规则在 proxy 规则之前匹配（Open-Box 路由规则自上而下）。
-
-## 与 OxiDNS 的对应关系
-
-OxiDNS `/etc/oxidns/config.yaml` 的 `proxy_domains`（决定哪些域名解析结果写进 RouterOS ProxyNet = 代理判定源）已同步加入 proxy 名单的 4 个域：
-
-```yaml
+```
 - domain:browndust2.global
 - domain:googleapis.com
 - domain:withgoogle.com
 - domain:browndust2-db.souseha.com
 ```
 
-direct 名单**不**加进 OxiDNS（不写 ProxyNet = 天然直连）。
+⚠️ 若名单扩了新后缀（如整个 pmang.cloud / akamaized.net 要走代理），**OxiDNS 侧要同步加**，否则 ProxyNet 不会写入对应 IP，mangle 不打标，流量到不了 Open-Box。
 
-## 编译 mrs（更新流程）
+## 导入步骤（面板）
 
-改完 `*.json` 后在任意有 sing-box ≥1.8 的环境执行：
+1. 分流/站点集 → Browndust2 → 规则集 URL 填 `browndust2.list` 的 raw 地址
+2. 保存部署后核对「匹配条目数」> 0
+3. 从 Browndust2 站点集手动规则里删除旧的 4 条（已被新名单覆盖）
+
+## 编译 .mrs（更新流程）
 
 ```sh
-sing-box rule-set compile browndust2/browndust2-proxy.json -o browndust2/browndust2-proxy.mrs
-sing-box rule-set compile browndust2/browndust2-direct.json -o browndust2/browndust2-direct.mrs
+sing-box rule-set compile browndust2/browndust2.json -o browndust2/browndust2.mrs
 ```
 
-（OpenWrt 上可用 `/opt/open-box/bin/sing-box rule-set compile ...`）
-
-## 原始分流需求（2026-09-16）
-
-```
-- DOMAIN,signin.browndust2.global,PROXY
-- DOMAIN-SUFFIX,googleapis.com,PROXY
-- DOMAIN-SUFFIX,withgoogle.com,PROXY
-- DOMAIN,www.neonapi.com,DIRECT
-- DOMAIN-SUFFIX,neonapi.com,DIRECT
-- DOMAIN-SUFFIX,bd2.pmang.cloud,DIRECT
-```
+（OpenWrt 上用 `/opt/open-box/bin/sing-box rule-set compile ...`）
