@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "domain_suffix": [
+        "browndust2.global",
+        "googleapis.com",
+        "withgoogle.com",
+        "souseha.com",
+        "akamaized.net",
+        "pmang.cloud"
+      ],
+      "domain": [
+        "signin.browndust2.global"
+      ]
+    }
+  ]
+}
