@@ -1,6 +1,0 @@
-# Browndust2 直连例外（DIRECT）
-# Neon（登录服务）与 pmang.cloud 云服务直连：POST /api/reload 语义下不走代理
-# 注意：bd2.pmang.cloud / msk.pmang.cloud 若同时出现在 proxy 名单中，本名单优先级更高（Open-Box 规则顺序在前）
-domain:neonapi.com
-domain:bd2.pmang.cloud
-domain:msk.pmang.cloud
