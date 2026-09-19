@@ -1,8 +1,6 @@
-# Browndust2 走代理名单（PROXY）—— 含原 Browndust2 站点集全部域名
-# Clash 规则行格式，Open-Box 面板「规则集链接」直接支持
-# 2026-09-16 v3：移除 googleapis.com / withgoogle.com（用户确认不应包含）
-DOMAIN-SUFFIX,browndust2.global
-DOMAIN-SUFFIX,souseha.com
-DOMAIN-SUFFIX,akamaized.net
-DOMAIN-SUFFIX,pmang.cloud
 DOMAIN,signin.browndust2.global
+DOMAIN-SUFFIX,googleapis.com
+DOMAIN-SUFFIX,withgoogle.com
+DOMAIN,www.neonapi.com
+DOMAIN-SUFFIX,neonapi.com
+DOMAIN-SUFFIX,bd2.pmang.cloud
